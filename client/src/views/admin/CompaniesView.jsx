@@ -3,7 +3,7 @@ import { api } from '../../api/index.js';
 import { toast } from '../../components/Toast.jsx';
 
 /* ─── Helpers ────────────────────────────────────────────────── */
-const EMPTY_FORM = { name: '', rut: '', contactName: '', phone: '', email: '' };
+const EMPTY_FORM = { name: '', rut: '', contactPerson: '', contactPhone: '', contactEmail: '' };
 
 function Skel({ w = '100%', h = 16, r = 6 }) {
   return (
@@ -20,11 +20,11 @@ function Skel({ w = '100%', h = 16, r = 6 }) {
 function CompanyModal({ initial, onSave, onClose }) {
   const isEdit = !!initial?._id;
   const [form, setForm] = useState(initial ? {
-    name:        initial.name        || '',
-    rut:         initial.rut         || '',
-    contactName: initial.contactName || '',
-    phone:       initial.phone       || '',
-    email:       initial.email       || '',
+    name:          initial.name          || '',
+    rut:           initial.rut           || '',
+    contactPerson: initial.contactPerson || '',
+    contactPhone:  initial.contactPhone  || '',
+    contactEmail:  initial.contactEmail  || '',
   } : { ...EMPTY_FORM });
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState('');
@@ -114,8 +114,8 @@ function CompanyModal({ initial, onSave, onClose }) {
           <div>
             <label style={labelStyle}>Contacto</label>
             <input
-              value={form.contactName}
-              onChange={e => set('contactName', e.target.value)}
+              value={form.contactPerson}
+              onChange={e => set('contactPerson', e.target.value)}
               placeholder="Nombre del contacto"
               style={inputStyle}
               onFocus={e => e.target.style.borderColor = '#0052FF'}
@@ -127,8 +127,8 @@ function CompanyModal({ initial, onSave, onClose }) {
             <div>
               <label style={labelStyle}>Teléfono</label>
               <input
-                value={form.phone}
-                onChange={e => set('phone', e.target.value)}
+                value={form.contactPhone}
+                onChange={e => set('contactPhone', e.target.value)}
                 placeholder="+56 9 1234 5678"
                 style={inputStyle}
                 onFocus={e => e.target.style.borderColor = '#0052FF'}
@@ -139,8 +139,8 @@ function CompanyModal({ initial, onSave, onClose }) {
               <label style={labelStyle}>Email</label>
               <input
                 type="email"
-                value={form.email}
-                onChange={e => set('email', e.target.value)}
+                value={form.contactEmail}
+                onChange={e => set('contactEmail', e.target.value)}
                 placeholder="empresa@mail.com"
                 style={inputStyle}
                 onFocus={e => e.target.style.borderColor = '#0052FF'}
@@ -292,7 +292,7 @@ export default function CompaniesView() {
     return (
       c.name?.toLowerCase().includes(q) ||
       c.rut?.toLowerCase().includes(q)  ||
-      c.email?.toLowerCase().includes(q)
+      c.contactEmail?.toLowerCase().includes(q)
     );
   });
 
@@ -432,12 +432,12 @@ export default function CompaniesView() {
                     <td style={{ ...tdStyle, color: '#64748B', fontFamily: 'monospace', fontSize: 12 }}>
                       {c.rut || '—'}
                     </td>
-                    <td style={tdStyle}>{c.contactName || '—'}</td>
-                    <td style={{ ...tdStyle, color: '#64748B' }}>{c.phone || '—'}</td>
+                    <td style={tdStyle}>{c.contactPerson || '—'}</td>
+                    <td style={{ ...tdStyle, color: '#64748B' }}>{c.contactPhone || '—'}</td>
                     <td style={{ ...tdStyle, color: '#0052FF' }}>
-                      {c.email ? (
-                        <a href={`mailto:${c.email}`} style={{ color: '#0052FF', textDecoration: 'none' }}>
-                          {c.email}
+                      {c.contactEmail ? (
+                        <a href={`mailto:${c.contactEmail}`} style={{ color: '#0052FF', textDecoration: 'none' }}>
+                          {c.contactEmail}
                         </a>
                       ) : '—'}
                     </td>

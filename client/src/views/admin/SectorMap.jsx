@@ -267,9 +267,8 @@ function ZoneEditPanel({ zone, onClose, onSaved, onDeleted }) {
       const id = zone._id || zone.id;
       const payload = {
         name: form.name,
-        basePrice: Number(form.basePrice) || 0,
+        price: Number(form.basePrice) || 0,
         color: form.color,
-        tiersMode: form.tiersMode,
         tiers: form.tiers.map(t => ({ ...t, minQty: Number(t.minQty), price: Number(t.price) || 0 })),
       };
       const updated = await api.updateZone(id, payload);
@@ -552,6 +551,20 @@ export default function SectorMap() {
 
   /* ── Seed communes ── */
   async function seedCommunes() {
+    if (!window.confirm('Esto descargará las comunas de la Región Metropolitana desde GitHub (~52 comunas). ¿Continuar?')) return;
+    setSeeding(true);
+    try {
+      await api.seedCommunes([]);
+      toast.success('Comunas de la RM cargadas');
+      loadZones();
+    } catch (err) {
+      toast.error(err.message || 'Error al cargar comunas');
+    } finally {
+      setSeeding(false);
+    }
+  }
+
+  async function seedCommunesFromFile() {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.geojson,.json';
@@ -564,7 +577,7 @@ export default function SectorMap() {
         const json = JSON.parse(text);
         const features = json.features || json;
         await api.seedCommunes(features);
-        toast.success('Comunas cargadas');
+        toast.success('Comunas cargadas desde archivo');
         loadZones();
       } catch (err) {
         toast.error(err.message || 'Error al cargar comunas');
@@ -642,8 +655,11 @@ export default function SectorMap() {
           <Btn variant="ghost" onClick={seedCommunes} loading={seeding} style={{ flex: 1 }}>
             Cargar RM
           </Btn>
+          <Btn variant="ghost" onClick={seedCommunesFromFile} loading={seeding} style={{ flex: 1 }} title="Cargar GeoJSON personalizado">
+            GeoJSON
+          </Btn>
           <Btn variant="danger" onClick={deleteAllCommunes} style={{ padding: '6px 10px', fontSize: 11 }}>
-            🗑 Comunas
+            🗑
           </Btn>
         </div>
 

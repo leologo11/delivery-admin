@@ -317,8 +317,8 @@ function NewRouteModal({ open, onClose, onCreated, drivers, companies }) {
 }
 
 /* ─── Nuevo paquete modal ────────────────────────────────────── */
-function NewPackageModal({ open, onClose, onCreated, routeId, prices }) {
-  const defaultForm = { customerName: '', address: '', commune: '', apt: '', phone: '', price: '', notes: '', order: '' };
+function NewPackageModal({ open, onClose, onCreated, routeId, prices, companies }) {
+  const defaultForm = { customerName: '', customerLastName: '', address: '', commune: '', apt: '', phone: '', price: '', notes: '', companyId: '' };
   const [form, setForm] = useState(defaultForm);
   const [saving, setSaving] = useState(false);
 
@@ -326,7 +326,6 @@ function NewPackageModal({ open, onClose, onCreated, routeId, prices }) {
 
   function onCommuneChange(v) {
     setF('commune', v);
-    // Auto-suggest price
     const match = (prices || []).find(p =>
       (p.commune || p.name || '').toLowerCase() === v.toLowerCase()
     );
@@ -336,9 +335,21 @@ function NewPackageModal({ open, onClose, onCreated, routeId, prices }) {
   async function submit(e) {
     e.preventDefault();
     if (!form.customerName.trim()) { toast.error('El nombre del cliente es requerido'); return; }
+    if (!form.companyId) { toast.error('Selecciona una empresa'); return; }
     setSaving(true);
     try {
-      const pkg = await api.createPackage({ ...form, routeId, price: Number(form.price) || 0 });
+      const pkg = await api.createPackage({
+        customerName: form.customerName,
+        customerLastName: form.customerLastName,
+        address: form.address,
+        commune: form.commune,
+        aptFloor: form.apt,
+        customerPhone: form.phone,
+        price: Number(form.price) || 0,
+        note: form.notes,
+        companyId: form.companyId,
+        routeId: routeId || null,
+      });
       toast.success('Paquete agregado');
       onCreated(pkg);
       setForm(defaultForm);
@@ -351,14 +362,22 @@ function NewPackageModal({ open, onClose, onCreated, routeId, prices }) {
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Agregar Paquete" width={520}>
+    <Modal open={open} onClose={onClose} title="Agregar Paquete" width={540}>
       <form onSubmit={submit}>
+        <Field label="Empresa" required>
+          <select style={selectStyle} value={form.companyId} onChange={e => setF('companyId', e.target.value)} required>
+            <option value="">Seleccionar empresa...</option>
+            {(companies || []).map(c => (
+              <option key={c._id || c.id} value={c._id || c.id}>{c.name}</option>
+            ))}
+          </select>
+        </Field>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 14px' }}>
           <Field label="Nombre cliente" required>
-            <input style={inputStyle} value={form.customerName} onChange={e => setF('customerName', e.target.value)} placeholder="Juan Pérez" />
+            <input style={inputStyle} value={form.customerName} onChange={e => setF('customerName', e.target.value)} placeholder="Juan" />
           </Field>
-          <Field label="Teléfono">
-            <input style={inputStyle} value={form.phone} onChange={e => setF('phone', e.target.value)} placeholder="+56 9 XXXX XXXX" />
+          <Field label="Apellido">
+            <input style={inputStyle} value={form.customerLastName} onChange={e => setF('customerLastName', e.target.value)} placeholder="Pérez" />
           </Field>
         </div>
         <Field label="Dirección" required>
@@ -375,12 +394,17 @@ function NewPackageModal({ open, onClose, onCreated, routeId, prices }) {
             <input type="number" style={inputStyle} value={form.price} onChange={e => setF('price', e.target.value)} placeholder="0" />
           </Field>
         </div>
-        <Field label="Notas">
-          <input style={inputStyle} value={form.notes} onChange={e => setF('notes', e.target.value)} placeholder="Instrucciones de entrega..." />
-        </Field>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 14px' }}>
+          <Field label="Teléfono">
+            <input style={inputStyle} value={form.phone} onChange={e => setF('phone', e.target.value)} placeholder="+56 9 XXXX XXXX" />
+          </Field>
+          <Field label="Notas">
+            <input style={inputStyle} value={form.notes} onChange={e => setF('notes', e.target.value)} placeholder="Instrucciones..." />
+          </Field>
+        </div>
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 8 }}>
           <Btn variant="ghost" onClick={onClose}>Cancelar</Btn>
-          <Btn type="submit" loading={saving}>Agregar</Btn>
+          <Btn type="submit" loading={saving}>Agregar paquete</Btn>
         </div>
       </form>
     </Modal>
@@ -629,6 +653,7 @@ function PackagesPanel({ routeId, onClose }) {
   const [prices, setPrices] = useState([]);
   const [dragging, setDragging] = useState(null);
   const [dragOver, setDragOver] = useState(null);
+  const [companies, setCompanies] = useState([]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -642,7 +667,11 @@ function PackagesPanel({ routeId, onClose }) {
     }
   }, [routeId]);
 
-  useEffect(() => { load(); api.getPrices().then(r => setPrices(Array.isArray(r) ? r : r?.prices || [])).catch(() => {}); }, [load]);
+  useEffect(() => {
+    load();
+    api.getPrices().then(r => setPrices(Array.isArray(r) ? r : r?.prices || [])).catch(() => {});
+    api.getCompanies().then(r => setCompanies(Array.isArray(r) ? r : r?.companies || [])).catch(() => {});
+  }, [load]);
 
   async function deletePkg(id) {
     if (!window.confirm('¿Eliminar paquete?')) return;
@@ -857,6 +886,7 @@ function PackagesPanel({ routeId, onClose }) {
         onClose={() => setShowAdd(false)}
         routeId={routeId}
         prices={prices}
+        companies={companies}
         onCreated={pkg => setPackages(prev => [...prev, pkg])}
       />
       <ImportAIModal

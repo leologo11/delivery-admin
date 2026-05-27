@@ -71,7 +71,7 @@ export const api = {
     return post('/companies', data);
   },
   updateCompany(id, data) {
-    return put(`/companies/${id}`, data);
+    return patch(`/companies/${id}`, data);
   },
   deleteCompany(id) {
     return del(`/companies/${id}`);
@@ -85,7 +85,7 @@ export const api = {
     return post('/users', data);
   },
   updateUser(id, data) {
-    return put(`/users/${id}`, data);
+    return patch(`/users/${id}`, data);
   },
   deleteUser(id) {
     return del(`/users/${id}`);
@@ -186,7 +186,7 @@ export const api = {
     return post('/zones', data);
   },
   updateZone(id, data) {
-    return put(`/zones/${id}`, data);
+    return patch(`/zones/${id}`, data);
   },
   deleteZone(id) {
     return del(`/zones/${id}`);
