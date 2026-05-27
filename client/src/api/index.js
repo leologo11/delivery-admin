@@ -125,7 +125,7 @@ export const api = {
 
   // ─── Packages ──────────────────────────────────────────────
   getAllPackages(params) {
-    return get(`/packages${toQuery(params)}`);
+    return get(`/packages/all${toQuery(params)}`);
   },
   getPackages(routeId) {
     return get(`/routes/${routeId}/packages`);

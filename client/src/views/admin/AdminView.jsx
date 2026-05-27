@@ -6,28 +6,7 @@ import UserManager      from './UserManager.jsx';
 import RoutesView       from './RoutesView.jsx';
 import GeneralMapView   from './GeneralMapView.jsx';
 import SectorMap        from './SectorMap.jsx';
-
-/* ─── Placeholder views ──────────────────────────────────────── */
-function PlaceholderView({ title, icon }) {
-  return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      height: '100%',
-      minHeight: 400,
-      gap: 16,
-      color: '#64748B',
-    }}>
-      <div style={{ fontSize: 48 }}>{icon}</div>
-      <div style={{ fontWeight: 700, fontSize: 20, color: '#1E293B' }}>{title}</div>
-      <div style={{ fontSize: 14 }}>Vista en construcción</div>
-    </div>
-  );
-}
-
-function AllPackagesView() { return <PlaceholderView title="Paquetes" icon="📦" />; }
+import AllPackagesView  from './AllPackagesView.jsx';
 
 /* ─── Logo ───────────────────────────────────────────────────── */
 function SidebarLogo() {

@@ -4,7 +4,7 @@ import { requireAuth, requireRole } from '../middleware/auth.js';
 import { upload, uploadToCloudinary, deletePhoto } from '../utils/cloudinary.js';
 import { syncRouteStats } from './deliveryRoutes.js';
 import { geocodeAddress } from '../utils/geocode.js';
-import { qs, supabaseRequest } from '../utils/supabase.js';
+import { qs, supabaseRequest, supabaseCountedRequest } from '../utils/supabase.js';
 
 const router = Router();
 
@@ -71,8 +71,8 @@ router.get('/all', requireRole('admin'), async (req, res) => {
     if (status && status !== 'todos') params.status = `eq.${status}`;
     if (routeId) params.route_id = `eq.${routeId}`;
     if (companyId) params.company_id = `eq.${companyId}`;
-    const rows = await supabaseRequest(`/packages${qs(params)}`);
-    res.json({ packages: rows.map(norm), total: rows.length, page: Number(page), limit: Number(limit) });
+    const { rows, total } = await supabaseCountedRequest(`/packages${qs(params)}`);
+    res.json({ packages: rows.map(norm), total, page: Number(page), limit: Number(limit) });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 

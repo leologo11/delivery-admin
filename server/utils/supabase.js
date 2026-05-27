@@ -19,6 +19,28 @@ export async function supabaseRequest(path, options = {}) {
   return data;
 }
 
+/* Returns { rows, total } using Supabase count=exact */
+export async function supabaseCountedRequest(path, options = {}) {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) throw new Error('Supabase no configurado.');
+  const res = await fetch(`${SUPABASE_URL}/rest/v1${path}`, {
+    ...options,
+    headers: {
+      apikey: SUPABASE_SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation,count=exact',
+      ...(options.headers || {}),
+    },
+  });
+  const text = await res.text();
+  const data = text ? JSON.parse(text) : null;
+  if (!res.ok) throw new Error(data?.message || data?.error || `Supabase HTTP ${res.status}`);
+  // Content-Range: 0-59/500
+  const cr = res.headers.get('content-range') || '';
+  const total = parseInt(cr.split('/')[1] ?? '0', 10) || (Array.isArray(data) ? data.length : 0);
+  return { rows: Array.isArray(data) ? data : [], total };
+}
+
 export function qs(params = {}) {
   const search = new URLSearchParams();
   Object.entries(params).forEach(([k, v]) => {
