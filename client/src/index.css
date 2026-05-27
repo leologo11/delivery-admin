@@ -1,0 +1,285 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Montserrat:wght@400;600;700;800;900&display=swap');
+
+/* ─── Design Tokens ─────────────────────────────────────────── */
+:root {
+  /* Backgrounds */
+  --bg: #F1F5F9;
+  --card: #ffffff;
+  --card2: #f4f7ff;
+  --border: #dbe3ef;
+
+  /* Accent */
+  --accent: #0052FF;
+  --accent-dim: #0052FF14;
+  --accent-hover: #0047DD;
+  --a2: #00DAFF;
+
+  /* Semantic */
+  --danger: #cc2244;
+  --danger-dim: #cc224412;
+  --warn: #d4650a;
+  --warn-dim: #d4650a12;
+  --success: #22a85a;
+  --success-dim: #22a85a12;
+
+  /* Text */
+  --text: #0F172A;
+  --text2: #1E293B;
+  --muted: #64748B;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 2px 0 rgba(15,23,42,.06);
+  --shadow-sm: 0 1px 3px 0 rgba(15,23,42,.10), 0 1px 2px -1px rgba(15,23,42,.06);
+  --shadow-md: 0 4px 6px -1px rgba(15,23,42,.10), 0 2px 4px -2px rgba(15,23,42,.06);
+  --shadow-lg: 0 10px 15px -3px rgba(15,23,42,.10), 0 4px 6px -4px rgba(15,23,42,.06);
+  --shadow-xl: 0 20px 25px -5px rgba(15,23,42,.12), 0 8px 10px -6px rgba(15,23,42,.06);
+
+  /* Border radius */
+  --r-xs: 6px;
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 18px;
+  --r-xl: 24px;
+  --r-full: 999px;
+
+  /* Transitions */
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --t-fast: .12s;
+  --t-base: .18s;
+  --t-slow: .3s;
+}
+
+/* ─── Reset & Base ──────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+input, select, textarea {
+  font-family: inherit;
+  outline: none;
+}
+
+/* ─── Scrollbar ─────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: var(--r-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+/* ─── Keyframe Animations ───────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(100%); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ─── Card ──────────────────────────────────────────────────── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ─── Buttons ───────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: var(--r-sm);
+  transition: all var(--t-base) var(--ease);
+  cursor: pointer;
+  border: none;
+  white-space: nowrap;
+  line-height: 1;
+  font-family: 'Inter', sans-serif;
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent) 0%, #0041CC 100%);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0,82,255,.30);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--accent-hover) 0%, #0036BB 100%);
+  box-shadow: 0 4px 12px rgba(0,82,255,.40);
+  transform: translateY(-1px);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text2);
+  border: 1px solid var(--border);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: var(--card2);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ─── Badges ────────────────────────────────────────────────── */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: var(--r-full);
+  white-space: nowrap;
+  font-family: 'Inter', sans-serif;
+}
+
+.badge-success {
+  background: var(--success-dim);
+  color: var(--success);
+}
+
+.badge-danger {
+  background: var(--danger-dim);
+  color: var(--danger);
+}
+
+.badge-warn {
+  background: var(--warn-dim);
+  color: var(--warn);
+}
+
+.badge-muted {
+  background: rgba(100,116,139,.12);
+  color: var(--muted);
+}
+
+.badge-accent {
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
+/* ─── Leaflet Overrides ─────────────────────────────────────── */
+.leaflet-popup-content-wrapper {
+  border-radius: var(--r-md) !important;
+  box-shadow: var(--shadow-lg) !important;
+  border: 1px solid var(--border) !important;
+  font-family: 'Inter', sans-serif !important;
+}
+
+.leaflet-popup-tip-container .leaflet-popup-tip {
+  background: var(--card) !important;
+}
+
+.leaflet-popup-close-button {
+  color: var(--muted) !important;
+  font-size: 18px !important;
+  top: 8px !important;
+  right: 8px !important;
+}
+
+.leaflet-popup-close-button:hover {
+  color: var(--accent) !important;
+}
+
+.leaflet-control-zoom {
+  border: 1px solid var(--border) !important;
+  border-radius: var(--r-sm) !important;
+  box-shadow: var(--shadow-md) !important;
+  overflow: hidden;
+}
+
+.leaflet-control-zoom a {
+  background: var(--card) !important;
+  color: var(--text2) !important;
+  border-bottom: 1px solid var(--border) !important;
+  transition: all var(--t-fast) var(--ease) !important;
+  font-size: 18px !important;
+  line-height: 26px !important;
+  width: 30px !important;
+  height: 30px !important;
+}
+
+.leaflet-control-zoom a:hover {
+  background: var(--accent-dim) !important;
+  color: var(--accent) !important;
+}
+
+.leaflet-control-attribution {
+  font-family: 'Inter', sans-serif !important;
+  font-size: 10px !important;
+  color: var(--muted) !important;
+  background: rgba(255,255,255,.8) !important;
+}
+
+/* ─── Utility ───────────────────────────────────────────────── */
+.animate-fadeIn   { animation: fadeIn   var(--t-slow) var(--ease) both; }
+.animate-slideUp  { animation: slideUp  var(--t-slow) var(--ease) both; }
+.animate-scaleIn  { animation: scaleIn  var(--t-slow) var(--ease) both; }
+.animate-pulse    { animation: pulse 1.5s var(--ease) infinite; }
