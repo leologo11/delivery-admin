@@ -71,9 +71,20 @@ router.post('/seed-communes', requireRole('admin'), async (req, res) => {
     if (Array.isArray(req.body?.features) && req.body.features.length > 0) {
       features = req.body.features;
     } else {
-      const r = await fetch(GEO_URL, { signal: AbortSignal.timeout(25000) });
-      if (!r.ok) throw new Error('No se pudo descargar el mapa de comunas');
-      features = (await r.json()).features;
+      let r;
+      try {
+        const ctrl = new AbortController();
+        const t = setTimeout(() => ctrl.abort(), 25000);
+        r = await fetch(GEO_URL, { signal: ctrl.signal });
+        clearTimeout(t);
+      } catch (fetchErr) {
+        return res.status(502).json({
+          error: `No se pudo descargar el GeoJSON desde GitHub: ${fetchErr.message}. Usa el botón "GeoJSON" para subir el archivo manualmente.`
+        });
+      }
+      if (!r.ok) return res.status(502).json({ error: `GitHub respondió HTTP ${r.status}. Usa el botón "GeoJSON" para subir el archivo manualmente.` });
+      const json = await r.json();
+      features = json.features;
     }
     const configs = await supabaseRequest(`/price_configs${qs({ select: '*' })}`);
     const priceMap = {};
@@ -118,8 +129,20 @@ router.post('/parse-prices-ai', requireRole('admin'), upload.single('file'), asy
       } else {
         content = `${PRICE_PROMPT}\n\n${req.file.buffer.toString('utf-8').slice(0, 8000)}`;
       }
-    } else if (req.body?.text) {
-      content = `${PRICE_PROMPT}\n\n${String(req.body.text).slice(0, 8000)}`;
+    } else if (req.body?.source) {
+      const src = String(req.body.source);
+      if (src.startsWith('data:')) {
+        // base64 image data URL
+        const [header, data] = src.split(',');
+        const mime = header.match(/:(.*?);/)?.[1] || 'image/jpeg';
+        const allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+        content = [
+          { type: 'image', source: { type: 'base64', media_type: allowed.includes(mime) ? mime : 'image/jpeg', data } },
+          { type: 'text', text: PRICE_PROMPT },
+        ];
+      } else {
+        content = `${PRICE_PROMPT}\n\n${src.slice(0, 8000)}`;
+      }
     } else {
       return res.status(400).json({ error: 'Requiere archivo o texto' });
     }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { api } from '../../api/index.js';
 import { toast } from '../../components/Toast.jsx';
 
@@ -282,10 +282,125 @@ function DetailDrawer({ pkg, onClose, onStatusChange, onDelete }) {
   );
 }
 
+/* ─── New Package Modal ──────────────────────────────────────── */
+const inputSt = { width: '100%', padding: '9px 12px', border: '1.5px solid #dbe3ef', borderRadius: 8, fontSize: 13, color: '#0F172A', background: '#f8fafc', outline: 'none', fontFamily: 'Inter,sans-serif', boxSizing: 'border-box' };
+const labelSt = { display: 'block', fontSize: 11, fontWeight: 600, color: '#64748B', marginBottom: 5, textTransform: 'uppercase', letterSpacing: '.4px' };
+
+function NewPkgModal({ companies, prices, onClose, onCreated }) {
+  const EMPTY = { companyId: '', customerName: '', customerLastName: '', address: '', commune: '', aptFloor: '', customerPhone: '', price: '', note: '' };
+  const [form, setForm] = useState(EMPTY);
+  const [saving, setSaving] = useState(false);
+
+  function setF(k, v) { setForm(p => ({ ...p, [k]: v })); }
+
+  function onCommune(v) {
+    setF('commune', v);
+    const match = (prices || []).find(p => (p.commune || '').toLowerCase() === v.toLowerCase());
+    if (match) setF('price', String(match.price || match.basePrice || ''));
+  }
+
+  async function submit(e) {
+    e.preventDefault();
+    if (!form.companyId) { toast.error('Selecciona una empresa'); return; }
+    if (!form.customerName.trim()) { toast.error('Nombre del cliente requerido'); return; }
+    if (!form.address.trim()) { toast.error('Dirección requerida'); return; }
+    setSaving(true);
+    try {
+      const pkg = await api.createPackage({
+        companyId: form.companyId,
+        routeId: null,
+        customerName: form.customerName.trim(),
+        customerLastName: form.customerLastName.trim() || null,
+        customerPhone: form.customerPhone.trim() || null,
+        address: form.address.trim(),
+        commune: form.commune.trim() || null,
+        aptFloor: form.aptFloor.trim() || null,
+        price: Number(form.price) || 0,
+        note: form.note.trim() || null,
+      });
+      toast.success('Paquete creado en el pool');
+      onCreated(pkg);
+      onClose();
+    } catch (err) {
+      toast.error(err.message || 'Error al crear paquete');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const F = ({ label, children }) => (
+    <div style={{ marginBottom: 12 }}>
+      <label style={labelSt}>{label}</label>
+      {children}
+    </div>
+  );
+
+  return (
+    <div
+      onClick={e => { if (e.target === e.currentTarget) onClose(); }}
+      style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'rgba(15,23,42,.5)', backdropFilter: 'blur(3px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+    >
+      <div style={{ background: '#fff', borderRadius: 16, width: '100%', maxWidth: 540, maxHeight: '90vh', display: 'flex', flexDirection: 'column', boxShadow: '0 24px 64px rgba(15,23,42,.2)', animation: 'scaleIn .18s ease both' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 22px 14px', borderBottom: '1px solid #dbe3ef', flexShrink: 0 }}>
+          <div style={{ fontSize: 16, fontWeight: 700, color: '#0F172A', fontFamily: 'Montserrat,sans-serif' }}>Nuevo paquete (pool)</div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: '#94a3b8', lineHeight: 1 }}>×</button>
+        </div>
+        <div style={{ flex: 1, overflowY: 'auto', padding: '18px 22px' }}>
+          <form onSubmit={submit}>
+            <F label="Empresa *">
+              <select value={form.companyId} onChange={e => setF('companyId', e.target.value)} style={{ ...inputSt, cursor: 'pointer' }} required>
+                <option value="">Seleccionar empresa…</option>
+                {companies.map(c => <option key={c._id || c.id} value={c._id || c.id}>{c.name}</option>)}
+              </select>
+            </F>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 14px' }}>
+              <F label="Nombre *">
+                <input style={inputSt} value={form.customerName} onChange={e => setF('customerName', e.target.value)} placeholder="Juan" required onFocus={e => e.target.style.borderColor='#0052FF'} onBlur={e => e.target.style.borderColor='#dbe3ef'} />
+              </F>
+              <F label="Apellido">
+                <input style={inputSt} value={form.customerLastName} onChange={e => setF('customerLastName', e.target.value)} placeholder="Pérez" onFocus={e => e.target.style.borderColor='#0052FF'} onBlur={e => e.target.style.borderColor='#dbe3ef'} />
+              </F>
+            </div>
+            <F label="Dirección *">
+              <input style={inputSt} value={form.address} onChange={e => setF('address', e.target.value)} placeholder="Av. Providencia 1234" required onFocus={e => e.target.style.borderColor='#0052FF'} onBlur={e => e.target.style.borderColor='#dbe3ef'} />
+            </F>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0 10px' }}>
+              <F label="Comuna">
+                <input style={inputSt} value={form.commune} onChange={e => onCommune(e.target.value)} placeholder="Providencia" onFocus={e => e.target.style.borderColor='#0052FF'} onBlur={e => e.target.style.borderColor='#dbe3ef'} />
+              </F>
+              <F label="Dpto/Piso">
+                <input style={inputSt} value={form.aptFloor} onChange={e => setF('aptFloor', e.target.value)} placeholder="Dpto 5B" onFocus={e => e.target.style.borderColor='#0052FF'} onBlur={e => e.target.style.borderColor='#dbe3ef'} />
+              </F>
+              <F label="Precio (CLP)">
+                <input type="number" style={inputSt} value={form.price} onChange={e => setF('price', e.target.value)} placeholder="0" onFocus={e => e.target.style.borderColor='#0052FF'} onBlur={e => e.target.style.borderColor='#dbe3ef'} />
+              </F>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 14px' }}>
+              <F label="Teléfono">
+                <input style={inputSt} value={form.customerPhone} onChange={e => setF('customerPhone', e.target.value)} placeholder="+56 9 XXXX XXXX" onFocus={e => e.target.style.borderColor='#0052FF'} onBlur={e => e.target.style.borderColor='#dbe3ef'} />
+              </F>
+              <F label="Nota">
+                <input style={inputSt} value={form.note} onChange={e => setF('note', e.target.value)} placeholder="Instrucciones…" onFocus={e => e.target.style.borderColor='#0052FF'} onBlur={e => e.target.style.borderColor='#dbe3ef'} />
+              </F>
+            </div>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 8, paddingTop: 8, borderTop: '1px solid #f1f5f9' }}>
+              <button type="button" onClick={onClose} style={{ padding: '9px 20px', background: 'transparent', border: '1px solid #dbe3ef', borderRadius: 9, fontSize: 13, fontWeight: 600, cursor: 'pointer', color: '#64748B' }}>Cancelar</button>
+              <button type="submit" disabled={saving} style={{ padding: '9px 22px', background: saving ? '#94a3b8' : 'linear-gradient(135deg,#0052FF,#0041CC)', color: '#fff', border: 'none', borderRadius: 9, fontSize: 13, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer' }}>
+                {saving ? 'Creando…' : 'Crear paquete'}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ─── AllPackagesView ────────────────────────────────────────── */
 export default function AllPackagesView() {
   const [packages,  setPackages]  = useState([]);
   const [companies, setCompanies] = useState([]);
+  const [prices,    setPrices]    = useState([]);
   const [loading,   setLoading]   = useState(true);
   const [page,      setPage]      = useState(1);
   const [total,     setTotal]     = useState(0);
@@ -293,6 +408,7 @@ export default function AllPackagesView() {
   const [companyId, setCompanyId] = useState('');
   const [search,    setSearch]    = useState('');
   const [selected,  setSelected]  = useState(null);
+  const [showNew,   setShowNew]   = useState(false);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
@@ -316,6 +432,7 @@ export default function AllPackagesView() {
 
   useEffect(() => {
     api.getCompanies().then(d => setCompanies(Array.isArray(d) ? d : d?.companies || [])).catch(() => {});
+    api.getPrices().then(d => setPrices(Array.isArray(d) ? d : d?.prices || [])).catch(() => {});
   }, []);
 
   function applyFilter() {
@@ -368,6 +485,7 @@ export default function AllPackagesView() {
       <style>{`
         @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
         @keyframes slideInRight { from{transform:translateX(100%)} to{transform:translateX(0)} }
+        @keyframes scaleIn { from{opacity:0;transform:scale(.93)} to{opacity:1;transform:scale(1)} }
       `}</style>
 
       {/* Header */}
@@ -380,6 +498,19 @@ export default function AllPackagesView() {
             {loading ? '…' : `${total.toLocaleString()} paquete${total !== 1 ? 's' : ''} en total`}
           </p>
         </div>
+        <button
+          onClick={() => setShowNew(true)}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 8,
+            padding: '10px 20px',
+            background: 'linear-gradient(135deg,#0052FF,#0041CC)',
+            color: '#fff', border: 'none', borderRadius: 10,
+            fontSize: 14, fontWeight: 600, cursor: 'pointer',
+            boxShadow: '0 2px 10px rgba(0,82,255,.30)',
+          }}
+        >
+          + Agregar paquete
+        </button>
       </div>
 
       {/* Filters bar */}
@@ -649,6 +780,19 @@ export default function AllPackagesView() {
           onClose={() => setSelected(null)}
           onStatusChange={handleStatusChange}
           onDelete={handleDelete}
+        />
+      )}
+
+      {/* New Package Modal */}
+      {showNew && (
+        <NewPkgModal
+          companies={companies}
+          prices={prices}
+          onClose={() => setShowNew(false)}
+          onCreated={pkg => {
+            setPackages(prev => [pkg, ...prev]);
+            setTotal(t => t + 1);
+          }}
         />
       )}
     </div>
