@@ -71,20 +71,19 @@ router.post('/seed-communes', requireRole('admin'), async (req, res) => {
     if (Array.isArray(req.body?.features) && req.body.features.length > 0) {
       features = req.body.features;
     } else {
-      let r;
+      // Fallback: intentar fetch server-side desde GitHub
       try {
         const ctrl = new AbortController();
-        const t = setTimeout(() => ctrl.abort(), 25000);
-        r = await fetch(GEO_URL, { signal: ctrl.signal });
+        const t = setTimeout(() => ctrl.abort(), 20000);
+        const r = await fetch(GEO_URL, { signal: ctrl.signal });
         clearTimeout(t);
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        features = (await r.json()).features;
       } catch (fetchErr) {
         return res.status(502).json({
-          error: `No se pudo descargar el GeoJSON desde GitHub: ${fetchErr.message}. Usa el botón "GeoJSON" para subir el archivo manualmente.`
+          error: `El servidor no pudo acceder a GitHub: ${fetchErr.message}. El botón "Cargar RM" ahora lo descarga desde el browser — recarga la página y vuelve a intentarlo.`
         });
       }
-      if (!r.ok) return res.status(502).json({ error: `GitHub respondió HTTP ${r.status}. Usa el botón "GeoJSON" para subir el archivo manualmente.` });
-      const json = await r.json();
-      features = json.features;
     }
     const configs = await supabaseRequest(`/price_configs${qs({ select: '*' })}`);
     const priceMap = {};

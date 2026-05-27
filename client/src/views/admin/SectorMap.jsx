@@ -550,12 +550,26 @@ export default function SectorMap() {
   }, [zones]);
 
   /* ── Seed communes ── */
+  const GEO_URL = 'https://raw.githubusercontent.com/robsalasco/precenso_2016_geojson_chile/master/Comunas_Metropolitana.geojson';
+
   async function seedCommunes() {
-    if (!window.confirm('Esto descargará las comunas de la Región Metropolitana desde GitHub (~52 comunas). ¿Continuar?')) return;
+    if (!window.confirm('Descargará las comunas de la RM desde GitHub y las cargará en el mapa. ¿Continuar?')) return;
     setSeeding(true);
     try {
-      await api.seedCommunes([]);
-      toast.success('Comunas de la RM cargadas');
+      // Fetch client-side (browser tiene acceso a GitHub; el servidor puede no tenerlo)
+      let features;
+      try {
+        const r = await fetch(GEO_URL);
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const json = await r.json();
+        features = json.features;
+        if (!features?.length) throw new Error('GeoJSON vacío o formato inesperado');
+      } catch (fetchErr) {
+        toast.error(`No se pudo descargar el GeoJSON: ${fetchErr.message}. Usa el botón "GeoJSON" para subir el archivo.`);
+        return;
+      }
+      const result = await api.seedCommunes(features);
+      toast.success(`${result?.created ?? features.length} comunas cargadas`);
       loadZones();
     } catch (err) {
       toast.error(err.message || 'Error al cargar comunas');
@@ -575,9 +589,10 @@ export default function SectorMap() {
       try {
         const text = await file.text();
         const json = JSON.parse(text);
-        const features = json.features || json;
-        await api.seedCommunes(features);
-        toast.success('Comunas cargadas desde archivo');
+        const features = json.features || (Array.isArray(json) ? json : null);
+        if (!features?.length) throw new Error('Archivo sin features GeoJSON válidas');
+        const result = await api.seedCommunes(features);
+        toast.success(`${result?.created ?? features.length} comunas cargadas desde archivo`);
         loadZones();
       } catch (err) {
         toast.error(err.message || 'Error al cargar comunas');
